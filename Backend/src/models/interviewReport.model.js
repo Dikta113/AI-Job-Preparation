@@ -101,11 +101,20 @@ const interviewReportSchema = new mongoose.Schema({
     selfDescription: {
         type: String
     },
-    matchScore: {
+  matchScore: {
+    technical: {
         type: Number,
         min: 0,
-        max: 100
+        max: 100,
+        required: true
     },
+    behavioral: {
+        type: Number,
+        min: 0,
+        max: 100,
+        required: true
+    }
+},
     technicalQuestions: [technicalQuestionSchema],
     behavioralQuestions: [behavioralQuestionSchema],
     skillGaps: [skillGapSchema],

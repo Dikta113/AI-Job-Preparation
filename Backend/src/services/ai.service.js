@@ -41,17 +41,48 @@ async function generateInterviewReport({ resume, selfDescription, jobDescription
     const prompt = `
 You are an expert interview coach.
 
+Analyze the resume and job description.
+
 Return ONLY valid JSON.
 
-Match score must be split into:
-- technical (0-100)
-- behavioral (0-100)
+Example format:
 
-Generate:
-- technicalQuestions
-- behavioralQuestions
-- skillGaps
-- preparationPlan
+{
+  "matchScore": {
+    "technical": 85,
+    "behavioral": 90
+  },
+  "technicalQuestions": [
+    {
+      "question": "Explain WebSockets.",
+      "intention": "Check realtime communication knowledge",
+      "answer": "WebSockets provide..."
+    }
+  ],
+  "behavioralQuestions": [
+    {
+      "question": "Tell me about a challenge.",
+      "intention": "Assess problem solving",
+      "answer": "In my project..."
+    }
+  ],
+  "skillGaps": [
+    {
+      "skill": "AWS",
+      "severity": "high"
+    }
+  ],
+  "preparationPlan": [
+    {
+      "day": 1,
+      "focus": "Backend Development",
+      "tasks": [
+        "Study Node.js",
+        "Practice Express"
+      ]
+    }
+  ]
+}
 
 Resume:
 ${resume}
@@ -64,16 +95,22 @@ ${selfDescription}
 `;
 
     const response = await ai.models.generateContent({
-        model: "gemini-2.5-pro",
+        model: "gemini-2.5-flash",
         contents: prompt,
         config: {
-            responseMimeType: "application/json",
-            responseSchema: zodToJsonSchema(interviewReportSchema),
+            responseMimeType: "application/json"
         }
     });
 
-    const text = response.text();
-    return JSON.parse(text);
+    console.log(response);
+
+    const text = response.text;
+
+    console.log(text);
+
+    const parsed = JSON.parse(text);
+
+    return parsed;
 }
 
 module.exports = generateInterviewReport;
