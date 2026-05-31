@@ -1,14 +1,15 @@
-import React from "react";
+import React, { useRef } from "react";
 import "../style/home.scss";
 
 const InterviewHomeUI = ({
   jobDescription = "",
   selfDescription = "",
   resumeFileName = "No resume selected",
-  onJobDescriptionChange = () => {},
-  onSelfDescriptionChange = () => {},
-  onResumeChange = () => {},
-  onGenerate = () => {},
+  onJobDescriptionChange = () => { },
+  onSelfDescriptionChange = () => { },
+  onResumeChange = () => { },
+  onGenerate = () => { },
+  resumeInputRef = null,
 }) => {
   return (
     <main className="interview-page">
@@ -66,6 +67,7 @@ const InterviewHomeUI = ({
                 <div className="file-label__detail">PDF or DOCX (Max 5MB)</div>
                 <div className="file-label__name">{resumeFileName}</div>
                 <input
+                  ref={resumeInputRef}
                   hidden
                   type="file"
                   id="resume"
@@ -98,7 +100,9 @@ const InterviewHomeUI = ({
               </div>
             </div>
 
-            <button className="button primary-button generate-button" onClick={onGenerate}>
+            <button
+              onClick={onGenerate}
+              className="button primary-button generate-button">
               Generate My Interview Strategy
             </button>
           </aside>

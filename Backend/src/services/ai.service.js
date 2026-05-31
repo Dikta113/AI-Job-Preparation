@@ -3,42 +3,43 @@ const { z } = require("zod");
 const { zodToJsonSchema } = require("zod-to-json-schema");
 
 const ai = new GoogleGenAI({
-    apiKey: process.env.GOOGLE_GENAI_API_KEY,
+  apiKey: process.env.GOOGLE_GENAI_API_KEY,
 });
 
 const interviewReportSchema = z.object({
-    matchScore: z.object({
-        technical: z.number().min(0).max(100),
-        behavioral: z.number().min(0).max(100),
-    }),
+  matchScore: z.object({
+    technical: z.number().min(0).max(100),
+    behavioral: z.number().min(0).max(100),
+  }),
 
-    technicalQuestions: z.array(z.object({
-        question: z.string(),
-        intention: z.string(),
-        answer: z.string(),
-    })),
+  technicalQuestions: z.array(z.object({
+    question: z.string(),
+    intention: z.string(),
+    answer: z.string(),
+  })),
 
-    behavioralQuestions: z.array(z.object({
-        question: z.string(),
-        intention: z.string(),
-        answer: z.string(),
-    })),
+  behavioralQuestions: z.array(z.object({
+    question: z.string(),
+    intention: z.string(),
+    answer: z.string(),
+  })),
 
-    skillGaps: z.array(z.object({
-        skill: z.string(),
-        severity: z.enum(["low", "medium", "high"]),
-    })),
+  skillGaps: z.array(z.object({
+    skill: z.string(),
+    severity: z.enum(["low", "medium", "high"]),
+  })),
 
-    preparationPlan: z.array(z.object({
-        day: z.number(),
-        focus: z.string(),
-        tasks: z.array(z.string()),
-    })),
+  preparationPlan: z.array(z.object({
+    day: z.number(),
+    focus: z.string(),
+    tasks: z.array(z.string()),
+  })),
+  title: z.string().describe("The title of the job for which the interview report is generated")
 });
 
 async function generateInterviewReport({ resume, selfDescription, jobDescription }) {
 
-    const prompt = `
+  const prompt = `
 You are an expert interview coach.
 
 Analyze the resume and job description.
@@ -94,23 +95,23 @@ Self Description:
 ${selfDescription}
 `;
 
-    const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: prompt,
-        config: {
-            responseMimeType: "application/json"
-        }
-    });
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents: prompt,
+    config: {
+      responseMimeType: "application/json"
+    }
+  });
 
-    console.log(response);
+  console.log(response);
 
-    const text = response.text;
+  const text = response.text;
 
-    console.log(text);
+  console.log(text);
 
-    const parsed = JSON.parse(text);
+  const parsed = JSON.parse(text);
 
-    return parsed;
+  return parsed;
 }
 
 module.exports = generateInterviewReport;
