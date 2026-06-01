@@ -1,4 +1,5 @@
 const pdfParse = require('pdf-parse');
+const mammoth = require('mammoth');
 const generateInterviewReport = require('../services/ai.service');
 const interviewReportModel = require('../models/interviewReport.model');
 
@@ -6,30 +7,57 @@ const interviewReportModel = require('../models/interviewReport.model');
  * @description Controller to generate an interview report based on user self description, resume and job description
  */
 
+async function extractResumeText(file) {
+    if (!file) {
+        return '';
+    }
+
+    const extension = file.originalname.split('.').pop().toLowerCase();
+
+    if (extension === 'pdf' || file.mimetype === 'application/pdf') {
+        const parsed = await pdfParse(file.buffer);
+        return parsed.text || '';
+    }
+
+    if (extension === 'docx' || file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+        const { value } = await mammoth.extractRawText({ buffer: file.buffer });
+        return value || '';
+    }
+
+    throw new Error('Unsupported resume format. Please upload a PDF or DOCX file.');
+}
+
 async function generateInterviewReportController(req, res) {
+    try {
+        const resumeText = await extractResumeText(req.file);
+        const { selfDescription, jobDescription } = req.body;
 
-    const resumeContent = await (new pdfParse.PDFParse(Uint8Array.from(req.file.buffer))).getText();
-    const { selfDescription, jobDescription } = req.body;
+        const interviewReportByAi = await generateInterviewReport({
+            resumeText,
+            selfDescription,
+            jobDescription
+        });
 
-    const interviewReportByAi = await generateInterviewReport({
-        resumeText: resumeContent.text,
-        selfDescription,
-        jobDescription
-    });
-    const interviewReport = await interviewReportModel.create({
-        user: req.user.id,
-        resumeText: resumeContent.text,
-        selfDescription,
-        jobDescription,
-        ...interviewReportByAi
-    });
+        const interviewReport = await interviewReportModel.create({
+            user: req.user.id,
+            resumeText,
+            selfDescription,
+            jobDescription,
+            title: interviewReportByAi?.title || `Interview plan for ${jobDescription?.slice(0, 60) || 'your role'}`,
+            ...interviewReportByAi
+        });
 
-
-    res.status(201).json({
-        message: "Interview report generated successfully",
-        interviewReport
-    })
-
+        res.status(201).json({
+            message: 'Interview report generated successfully',
+            interviewReport
+        });
+    } catch (error) {
+        console.error('Interview report generation failed:', error);
+        res.status(503).json({
+            message: 'Unable to generate interview report at this time. Please try again later.',
+            error: error.message || 'Service unavailable'
+        });
+    }
 }
 
 /**

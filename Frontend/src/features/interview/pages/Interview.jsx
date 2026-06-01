@@ -1,16 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../style/interview.scss';
 import { useInterview } from '../hooks/useInterview';
+import { useParams } from 'react-router';
 
 const Interview = () => {
     const [activeTab, setActiveTab] = useState('technical');
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-    const { report } = useInterview();
+    const { report, loading, getReportById } = useInterview();
+    const { interviewId } = useParams();
 
+    useEffect(() => {
+        if (interviewId) {
+            getReportById(interviewId);
+        }
+    }, [interviewId]);
+
+    if (loading) {
+        return <div className="loading-screen"><h1>Loading your interview plan...</h1></div>;
+    }
+
+    if (!report) {
+        return <div className="error-screen"><h1>Interview report not found</h1></div>;
+    }
 
     const currentQuestions = activeTab === 'technical'
-        ? interviewData.technicalQuestions
-        : interviewData.behavioralQuestions;
+        ? report.technicalQuestions
+        : report.behavioralQuestions;
 
     const currentQuestion = currentQuestions[currentQuestionIndex] || {};
 
@@ -38,7 +53,7 @@ const Interview = () => {
                                     setCurrentQuestionIndex(0);
                                 }}
                             >
-                                <span className="nav-item-count">{interviewData.technicalQuestions.length}</span>
+                                <span className="nav-item-count">{report.technicalQuestions.length}</span>
                                 Questions
                             </button>
                         </div>
@@ -52,7 +67,7 @@ const Interview = () => {
                                     setCurrentQuestionIndex(0);
                                 }}
                             >
-                                <span className="nav-item-count">{interviewData.behavioralQuestions.length}</span>
+                                <span className="nav-item-count">{report.behavioralQuestions.length}</span>
                                 Questions
                             </button>
                         </div>
@@ -60,7 +75,7 @@ const Interview = () => {
                         <div className="nav-section">
                             <h3 className="nav-section-title">Road Map</h3>
                             <div className="roadmap-list">
-                                {interviewData.preparationPlan.map((item) => (
+                                {report.preparationPlan.map((item) => (
                                     <div key={item.day} className="roadmap-item">
                                         <span className="roadmap-day">Day {item.day}</span>
                                         <span className="roadmap-focus">{item.focus}</span>
@@ -77,21 +92,21 @@ const Interview = () => {
                     <div className="score-section">
                         <div className="score-card">
                             <div className="score-label">Technical Score</div>
-                            <div className="score-value">{interviewData.matchScore.technical}%</div>
+                            <div className="score-value">{report.matchScore.technical}%</div>
                             <div className="score-bar">
                                 <div
                                     className="score-bar-fill score-bar-technical"
-                                    style={{ width: `${interviewData.matchScore.technical}%` }}
+                                    style={{ width: `${report.matchScore.technical}%` }}
                                 ></div>
                             </div>
                         </div>
                         <div className="score-card">
                             <div className="score-label">Behavioral Score</div>
-                            <div className="score-value">{interviewData.matchScore.behavioral}%</div>
+                            <div className="score-value">{report.matchScore.behavioral}%</div>
                             <div className="score-bar">
                                 <div
                                     className="score-bar-fill score-bar-behavioral"
-                                    style={{ width: `${interviewData.matchScore.behavioral}%` }}
+                                    style={{ width: `${report.matchScore.behavioral}%` }}
                                 ></div>
                             </div>
                         </div>
@@ -146,7 +161,7 @@ const Interview = () => {
                     <div className="skills-panel">
                         <h3 className="skills-title">Skill Gaps</h3>
                         <div className="skills-grid">
-                            {interviewData.skillGaps.map((item, idx) => (
+                            {report.skillGaps.map((item, idx) => (
                                 <span
                                     key={idx}
                                     className="skill-badge"

@@ -37,7 +37,7 @@ const interviewReportSchema = z.object({
   title: z.string().describe("The title of the job for which the interview report is generated")
 });
 
-async function generateInterviewReport({ resume, selfDescription, jobDescription }) {
+async function generateInterviewReport({ resumeText, selfDescription, jobDescription }) {
 
   const prompt = `
 You are an expert interview coach.
@@ -86,7 +86,7 @@ Example format:
 }
 
 Resume:
-${resume}
+${resumeText}
 
 Job Description:
 ${jobDescription}
@@ -103,13 +103,26 @@ ${selfDescription}
     }
   });
 
-  console.log(response);
+  const rawText = response.text || (response?.candidates?.[0]?.content?.parts || [])
+    .map((part) => (typeof part.text === 'string' ? part.text : ''))
+    .join('');
 
-  const text = response.text;
+  if (!rawText || !rawText.trim()) {
+    throw new Error('AI response contained no text output.');
+  }
 
-  console.log(text);
-
-  const parsed = JSON.parse(text);
+  let parsed;
+  try {
+    parsed = JSON.parse(rawText);
+  } catch (error) {
+    const match = rawText.match(/\{[\s\S]*\}$/);
+    if (match) {
+      parsed = JSON.parse(match[0]);
+    } else {
+      console.error('Failed to parse AI JSON output:', rawText);
+      throw new Error('AI response was not valid JSON.');
+    }
+  }
 
   return parsed;
 }

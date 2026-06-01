@@ -1,4 +1,5 @@
 import React, { useRef } from "react";
+import { useNavigate } from "react-router";
 import "../style/home.scss";
 
 const InterviewHomeUI = ({
@@ -10,7 +11,9 @@ const InterviewHomeUI = ({
   onResumeChange = () => { },
   onGenerate = () => { },
   resumeInputRef = null,
+  reports = [],
 }) => {
+  const navigate = useNavigate();
   return (
     <main className="interview-page">
       <div className="interview-page__wrapper">
@@ -106,7 +109,66 @@ const InterviewHomeUI = ({
               Generate My Interview Strategy
             </button>
           </aside>
+        
+          <aside className="recent-column">
+            <div className="input-card recent-reports">
+              <div className="panel-head">
+                <div>
+                  <h3>My Recent Interview Plans</h3>
+                </div>
+              </div>
+              <ul className="reports-list">
+                {reports && reports.length > 0 ? (
+                  reports.slice(0, 6).map((r) => (
+                    <li key={r._id} className="report-item" onClick={() => navigate(`/interview/${r._id}`)}>
+                      <div className="report-content">
+                        <div className="report-title">{r.title || 'Interview Report'}</div>
+                        <div className="report-date">{r.createdAt ? `Generated on ${new Date(r.createdAt).toLocaleDateString()}` : ''}</div>
+                      </div>
+                    </li>
+                  ))
+                ) : (
+                  <li className="empty">No recent reports</li>
+                )}
+              </ul>
+            </div>
+
+            {/* footer removed as requested */}
+          </aside>
         </section>
+
+        <div className="recent-row">
+          <h3 className="recent-row__title">My Recent Interview Plans</h3>
+          <div className="recent-cards">
+            {reports && reports.length > 0 ? (
+              reports.slice(0, 6).map((r) => {
+                const tech = r.matchScore?.technical ?? 0
+                const beh = r.matchScore?.behavioral ?? 0
+                const match = Math.round((tech + beh) / 2)
+                return (
+                  <div key={r._id} className="recent-card input-card" onClick={() => navigate(`/interview/${r._id}`)}>
+                    <div className="recent-card__title">{r.title || 'Interview Report'}</div>
+                    <div className="recent-card__meta">{r.createdAt ? `Generated on ${new Date(r.createdAt).toLocaleDateString()}` : ''}</div>
+                    <div className="recent-card__score">Match Score: <span className="score-value">{match}%</span></div>
+                  </div>
+                )
+              })
+            ) : (
+              <div className="no-reports">No recent reports</div>
+            )}
+          </div>
+
+          <footer className="site-footer">
+            <div className="footer-center">
+              <nav className="footer-links">
+                <a href="/privacy">Privacy Policy</a>
+                <a href="/terms">Terms of Service</a>
+                <a href="/help">Help Center</a>
+              </nav>
+            </div>
+          </footer>
+        </div>
+
       </div>
     </main>
   );
